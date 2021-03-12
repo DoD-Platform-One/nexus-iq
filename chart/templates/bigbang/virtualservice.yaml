@@ -1,0 +1,31 @@
+{{- if .Values.istio.enabled -}}
+{{- $serviceName := include "iqserver.fullname" . -}}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ template "iqserver.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/name: {{ include "iqserver.name" . }}
+    helm.sh/chart: {{ include "iqserver.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/part-of: nexus-iq-server
+    app.kubernetes.io/component: {{ include "iqserver.name" . }}
+spec:
+  gateways:
+    - main.istio-system.svc.cluster.local
+  hosts:
+    - "nexus-iq-server.{{ .Values.hostname }}"
+  http:
+    - route:
+        - destination:
+            port:
+              number: {{ .Values.iq.applicationPort }}
+            host: {{ $serviceName }}
+    - route:
+        - destination:
+            port:
+              number: {{ .Values.iq.adminPort }}
+            host: {{ $serviceName }}
+{{- end }}

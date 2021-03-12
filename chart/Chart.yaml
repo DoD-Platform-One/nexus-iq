@@ -1,0 +1,21 @@
+apiVersion: v2
+name: nexus-iq-server
+
+version: 103.0.1-bb.0
+appVersion: 1.103.0
+
+type: application
+
+keywords:
+  - sonatype
+  - nexus
+  - lifecycle
+  - iq
+  - remediate
+  - vulnerabilities
+  - policy
+home: https://www.sonatype.com/product-nexus-lifecycle
+icon: https://sonatype.github.io/helm3-charts/NexusIQServer_Vertical.svg
+maintainers:
+  - email:  support@sonatype.com
+    name: Sonatype
