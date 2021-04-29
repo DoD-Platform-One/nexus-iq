@@ -52,6 +52,12 @@ app.kubernetes.io/name: {{ include "iqserver.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end -}}
 
+{{- define "iq.licenseKey" -}}
+{{- if .Values.license_key }}
+sonatype-license.lic: {{ .Values.license_key }}
+{{- end }}
+{{- end -}}
+
 {{/*
 Create the name of the service account to use
 */}}

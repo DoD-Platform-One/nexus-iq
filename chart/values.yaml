@@ -3,15 +3,40 @@
 # Declare variables to be passed into your templates.
 
 # Big Bang Additions
-hostname: bigbang.dev
+domain: bigbang.dev
+hostname: nexus-iq-server
+
 istio:
-  enabled: true
+  enabled: false
+
+license_key: ""
+
+sso:
+  enabled: false
+  idp_metadata: ''
+  samlConfiguration: {}
+  # samlConfiguration:
+  #   identityProviderName: My SSO
+  #   entityId: https://nexus-iq-server.example.com/api/v2/config/saml/metadata
+  #   firstNameAttributeName: firstName
+  #   lastNameAttributeName: lastName
+  #   emailAttributeName: email
+  #   usernameAttributeName: username
+  #   groupsAttributeName: groups
+  #   validateResponseSignature: true
+  #   validateAssertionSignature: true
+
 
 #namespaceOverride: nexus
 replicaCount: 1
 image:
   repository: registry1.dso.mil/ironbank/sonatype/nexus-iq-server/nexus-iq-server
-  tag: latest
+  tag: 1.107.0-01
+  pullPolicy: IfNotPresent
+
+job_image:
+  repository: registry1.dso.mil/ironbank/redhat/ubi/ubi8-minimal
+  tag: 8.3
   pullPolicy: IfNotPresent
 
 iq:
@@ -22,13 +47,18 @@ iq:
   memory: 1Gi
   # base 64 encoded license file with no line breaks
   licenseSecret: ""
-  # add this line with this file path and the `licenseSecret` above to autoconfigure licensing
-  # licenseFile: /etc/nexus-iq-license/license_lic
   extraLabels:
+  # enter appropriate proxy settings as required. NXIQ requires external access
+  # to validate the license
   env:
     - name: JAVA_OPTS
-      value: "-Djava.util.prefs.userRoot=${SONATYPE_WORK}/javaprefs"
-
+      value: |-
+        -Djava.util.prefs.userRoot=$${SONATYPE_WORK}/javaprefs
+   #    -Dhttp.proxyHost=proxyserver
+   #    -Dhttp.proxyPort=proxyport
+   #    -Dhttps.proxyHost=proxyserver
+   #    -Dhttps.proxyPort=proxyport
+   #    -Dhttp.nonProxyHosts=nonproxyhosts
 
 deploymentStrategy: Recreate
 imagePullSecrets: []
@@ -60,7 +90,7 @@ service:
   port: 80
 
 ingress:
-  enabled: true
+  enabled: false
   annotations: {kubernetes.io/ingress.class: nginx}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
@@ -112,7 +142,8 @@ persistence:
 
 # configYaml is the full text of the config.yml file that will be passed to IQ Server
 configYaml:
-  baseUrl: http://iq-server.demo
+  # licenseFile: /etc/nexus-iq-license/sonatype-license.lic
+  # baseUrl: http://iq-server.demo
   sonatypeWork: /sonatype-work
   server:
     applicationConnectors:
@@ -122,14 +153,14 @@ configYaml:
       - type: http
         port: 8071
     # HTTP request log settings.
-    requestLog: 
+    requestLog:
       appenders:
         #All appenders set to console
-        - type: console    
+        - type: console
           # Do not display log statements below this threshold to stdout.
           threshold: INFO
           logFormat: "%clientHost %l %user [%date] \"%requestURL\" %statusCode %bytesSent %elapsedTime \"%header{User-Agent}\""
-  
+
   createSampleData: true
 
   logging:
@@ -150,23 +181,23 @@ configYaml:
         appenders:
           #All appenders set to console
           - type: console
-    
+
             # Do not display log statements below this threshold to stdout.
             threshold: INFO
 
       "com.sonatype.insight.policy.violation":
         appenders:
           - type: console
-    
+
             # Do not display log statements below this threshold to stdout.
             threshold: INFO
 
     appenders:
-  
+
       # Settings for logging to stdout.
       - type: console
-    
+
         # Do not display log statements below this threshold to stdout.
         threshold: INFO
-      
+
         logFormat: "%d{'yyyy-MM-dd HH:mm:ss,SSSZ'} %level [%thread] %X{username} %logger - %msg%n"

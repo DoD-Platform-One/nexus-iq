@@ -47,10 +47,16 @@ spec:
             httpGet:
               path: /ping
               port: admin
+            failureThreshold: 5
+            initialDelaySeconds: 60
+            periodSeconds: 5
           readinessProbe:
             httpGet:
               path: /
               port: application
+            failureThreshold: 5
+            initialDelaySeconds: 60
+            periodSeconds: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           volumeMounts:
@@ -58,7 +64,7 @@ spec:
               name: nxiq-pv-data
             - mountPath: /etc/nexus-iq-server
               name: config-volume
-  {{- if .Values.iq.licenseSecret }}
+  {{- if .Values.license_key }}
             - mountPath: /etc/nexus-iq-license
               name: license-volume
   {{- end }}
@@ -72,7 +78,7 @@ spec:
             items:
               - key: config.yml
                 path: config.yml
-  {{- if .Values.iq.licenseSecret }}
+  {{- if .Values.license_key }}
         - name: license-volume
           secret:
             secretName: {{ template "iqserver.fullname" . }}-license
