@@ -24,8 +24,6 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if .Values.proxy }}
-      {{- end }}
       containers:
       - image: "{{ .Values.job_image.repository }}:{{ .Values.job_image.tag }}"
         imagePullPolicy: {{ .Values.job_image.pullPolicy }}
