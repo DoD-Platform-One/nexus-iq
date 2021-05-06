@@ -1,0 +1,16 @@
+{{- if .Values.sso.enabled -}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "iqserver.fullname" . }}-sso
+  labels:
+    {{- include "iqserver.labels" . | nindent 4 }}
+    {{- if .Values.iq.extraLabels }}
+      {{- with .Values.iq.extraLabels }}
+        {{ toYaml . | indent 4 }}
+      {{- end }}
+    {{- end }}
+data:
+  idpmetadata.xml: {{ .Values.sso.idp_metadata }}
+  sso_data: {{ .Values.sso.attributes | toJson | quote }}
+{{- end -}}

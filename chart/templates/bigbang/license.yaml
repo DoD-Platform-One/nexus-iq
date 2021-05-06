@@ -1,0 +1,15 @@
+{{- if .Values.license_key }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ template "iqserver.fullname" . }}-license
+  labels:
+    {{- include "iqserver.labels" . | nindent 4 }}
+    {{- if .Values.iq.extraLabels }}
+      {{- with .Values.iq.extraLabels }}
+        {{ toYaml . | indent 4 }}
+      {{- end }}
+    {{- end }}
+data:
+{{ include "iq.licenseKey" . | indent 2 }}
+{{- end }}
