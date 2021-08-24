@@ -14,6 +14,14 @@ istio:
 
 license_key: ""
 
+mail:
+  enabled: false
+  mailConfiguration: {}
+  # mailConfiguration:
+  #   hostname: mail.service.consul
+  #   port: 25
+  #   systemEmail: "root@ac2sp.army.mil"
+  #   startTlsEnabled: true
 sso:
   enabled: false
   idp_metadata: ''
