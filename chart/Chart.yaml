@@ -1,7 +1,7 @@
 apiVersion: v2
 name: nexus-iq-server
 
-version: 103.0.1-bb.0
+version: 103.0.1-bb.1
 appVersion: 1.103.0
 
 type: application
