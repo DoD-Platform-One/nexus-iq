@@ -8,6 +8,9 @@ hostname: nexus-iq-server
 
 istio:
   enabled: false
+  iqserver:
+    gateways:
+    - "public"
 
 license_key: ""
 
