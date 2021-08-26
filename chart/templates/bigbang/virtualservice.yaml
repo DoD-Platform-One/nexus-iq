@@ -14,7 +14,9 @@ metadata:
     app.kubernetes.io/component: {{ include "iqserver.name" . }}
 spec:
   gateways:
-    - main.istio-system.svc.cluster.local
+  {{- range .Values.istio.iqserver.gateways }}
+    - {{ . }}
+  {{- end }}
   hosts:
     - "{{ .Values.hostname }}.{{ .Values.domain }}"
   http:
