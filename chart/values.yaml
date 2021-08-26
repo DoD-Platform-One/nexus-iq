@@ -10,7 +10,7 @@ istio:
   enabled: false
   iqserver:
     gateways:
-    - "public"
+    - "istio-system/public"
 
 license_key: ""
 
