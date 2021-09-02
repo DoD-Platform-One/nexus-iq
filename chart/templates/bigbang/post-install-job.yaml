@@ -42,25 +42,23 @@ spec:
           - |-
             BASE_URL="http://{{ template "iqserver.fullname" . }}.{{ template "iqserver.fullname" . }}-server.svc.cluster.local:{{ .Values.iq.applicationPort }}";
             until curl --head localhost:15000; do echo "Waiting for Sidecar"; sleep 30; done; echo "Sidecar available";
-            while [ "$(curl -s "${BASE_URL}/rest/product/license")" == "No valid product license installed." ]; do echo "Waiting for License"; sleep 5; done;
             {{- if .Values.sso.enabled }}
+            while [ "$(curl -s "${BASE_URL}/rest/product/license")" == "No valid product license installed." ]; do echo "Waiting for License"; sleep 5; done;
             curl -X PUT \
-                -u admin:admin123 \
+                -u {{ quote .Values.admin.username }}:{{ quote .Values.admin.password }} \
                 "${BASE_URL}/api/v2/config/saml" \
                 -F identityProviderXml=@/tmp/idpmetadata.xml \
                 -F samlConfiguration='{{ .Values.sso.samlConfiguration | toJson }}';
             {{- end }}
             {{- if .Values.mail.enabled }}
             curl -X PUT \
-                -u admin:admin123 \
+                -u {{ quote .Values.admin.username }}:{{ quote .Values.admin.password }} \
                 -H "Content-Type: application/json" \
                 -v "${BASE_URL}/api/v2/config/mail" \
                 -d '{{ .Values.mail.mailConfiguration | toJson}}';
             {{- end }}
-            {{- if or .Values.sso.enabled .Values.mail.enabled}}
             curl -fsI -X POST http://localhost:15020/quitquitquit;
             exit
-            {{- end }}
         resources: {}
       restartPolicy: Never
 status: {}

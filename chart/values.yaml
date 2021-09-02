@@ -14,6 +14,13 @@ istio:
 
 license_key: ""
 
+admin:
+  # Overriding the initial admin username/password is currently non-functional,
+  # due to lack of API support for changing user passwords.  This field
+  # currently only affects the credentials for the post-install job.
+  username: admin
+  password: admin123
+
 mail:
   enabled: false
   mailConfiguration: {}
