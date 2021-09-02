@@ -21,21 +21,51 @@ spec:
       labels:
         {{- include "iqserver.selectorLabels" . | nindent 8 }}
     spec:
-    {{- with .Values.imagePullSecrets }}
+      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
-    {{- end }}
+      {{- end }}
       serviceAccountName: {{ include "iqserver.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- if .Values.certificates.customCAs }}
+      initContainers:
+        - name: {{ .Chart.Name }}-truststore-gen
+          securityContext: {{ toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.certificates.image.repository }}:{{ .Values.certificates.image.tag }}"
+          imagePullPolicy: {{ quote .Values.certificates.image.pullPolicy }}
+          env: {{ toYaml .Values.iq.env | nindent 12 }}
+          resources: {{ toYaml .Values.resources | nindent 12 }}
+          command:
+            - sh
+            - -c
+            - |
+                CA_DIR=/opt/customcas
+                TRUSTSTORE_SOURCE=/etc/pki/java/cacerts
+                TRUSTSTORE_PATH=/opt/trust/cacerts
+                if [ -f "$TRUSTSTORE_SOURCE" ]; then
+                  cp -f "$TRUSTSTORE_SOURCE" "$TRUSTSTORE_PATH"
+                  chmod 0644 "$TRUSTSTORE_PATH"
+                fi
+                for ca in $(ls "$CA_DIR"); do
+                  keytool -import -noprompt -file "$CA_DIR/$ca" -alias "$ca" \
+                          -keystore "$TRUSTSTORE_PATH" \
+                          -storepass {{ quote .Values.certificates.truststore.password }}
+                done
+          volumeMounts:
+            - name: ephemeral-truststore
+              mountPath: /opt/trust
+              readOnly: false
+            - name: custom-ca-certificates
+              mountPath: /opt/customcas
+              readOnly: true
+      {{- end }}
       containers:
         - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+          securityContext: {{ toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          env:
-{{ toYaml .Values.iq.env | indent 12 }}
+          env: {{ toYaml .Values.iq.env | nindent 12 }}
           ports:
             - name: application
               containerPort: {{ .Values.iq.applicationPort }}
@@ -57,17 +87,24 @@ spec:
             failureThreshold: 5
             initialDelaySeconds: 60
             periodSeconds: 5
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+          resources: {{ toYaml .Values.resources | nindent 12 }}
           volumeMounts:
             - mountPath: /sonatype-work
               name: nxiq-pv-data
             - mountPath: /etc/nexus-iq-server
               name: config-volume
-  {{- if .Values.license_key }}
+            {{- if .Values.license_key }}
             - mountPath: /etc/nexus-iq-license
               name: license-volume
-  {{- end }}
+            {{- end }}
+            {{- if .Values.certificates.customCAs }}
+            - name: ephemeral-truststore
+              mountPath: /etc/pki/java
+              readOnly: false
+            - name: custom-ca-certificates
+              mountPath: /usr/share/pki/ca-trust-source/anchors
+              readOnly: true
+            {{- end }}
       volumes:
         - name: nxiq-pv-data
           persistentVolumeClaim:
@@ -78,12 +115,25 @@ spec:
             items:
               - key: config.yml
                 path: config.yml
-  {{- if .Values.license_key }}
+        {{- if .Values.license_key }}
         - name: license-volume
           secret:
             secretName: {{ template "iqserver.fullname" . }}-license
-  {{- end }}
-        {{- with .Values.nodeSelector }}
+        {{- end }}
+        {{- if .Values.certificates.customCAs }}
+        - name: ephemeral-truststore
+          emptyDir:
+            medium: Memory
+        - name: custom-ca-certificates
+          projected:
+            defaultMode: 0440
+            sources:
+              {{- range $customCA := .Values.certificates.customCAs }}
+              - secret:
+                  name: {{ $customCA.secret }}
+              {{- end }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
