@@ -23,8 +23,8 @@ admin:
 
 certificates:
   image:
-    repository: registry1.dso.mil/ironbank/redhat/openjdk/openjdk8
-    tag: 1.8.0
+    repository: registry1.dso.mil/ironbank/sonatype/nexus-iq-server/nexus-iq-server
+    tag: 1.107.0-01
     pullPolicy: IfNotPresent
   truststore:
     # If adding certificates to an existing truststore, the password should
