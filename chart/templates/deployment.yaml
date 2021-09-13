@@ -101,9 +101,6 @@ spec:
             - name: ephemeral-truststore
               mountPath: /etc/pki/java
               readOnly: false
-            - name: custom-ca-certificates
-              mountPath: /usr/share/pki/ca-trust-source/anchors
-              readOnly: true
             {{- end }}
       volumes:
         - name: nxiq-pv-data
