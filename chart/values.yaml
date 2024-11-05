@@ -22,50 +22,17 @@ admin:
   password: admin123
 
 certificates:
+  # defaultMode of the custom-ca-certificates volume
+  defaultMode: 420
   image:
     repository: registry1.dso.mil/ironbank/sonatype/nexus-iq-server/nexus-iq-server
-    tag: 1.107.0-01
+    tag: 1.183.0-01
     pullPolicy: IfNotPresent
   truststore:
     # If adding certificates to an existing truststore, the password should
     # match the password for the existing truststore.
     password: changeit
-  customCAs:
-    # DoD approved certificates from https://public.cyber.mil/unclass-dod_approved_external_pkis_trust_chains_v7/
-    - secret: ca-certs-dod-trust-anchors
-    - secret: ca-certs-dod-intermediate-dod-email-ca
-    - secret: ca-certs-dod-intermediate-dod-id-ca
-    - secret: ca-certs-dod-intermediate-dod-id-sw-ca
-    - secret: ca-certs-dod-intermediate-dod-sw-ca
-    - secret: ca-certs-eca-sha-1
-    - secret: ca-certs-eca-sha-256
-    - secret: ca-certs-ado-sha-256-cc-chain
-    - secret: ca-certs-ado-sha-256-dt-chain
-    - secret: ca-certs-boeing-sha-1
-    - secret: ca-certs-carillon-federal-services
-    - secret: ca-certs-department-of-state-trust-chain-1
-    - secret: ca-certs-department-of-state-trust-chain-2
-    - secret: ca-certs-entrust-nfi-trust-chain-1
-    - secret: ca-certs-entrust-nfi-trust-chain-2
-    - secret: ca-certs-entrust-ssp
-    - secret: ca-certs-exostar-llc
-    - secret: ca-certs-identrust-nfi
-    - secret: ca-certs-lockheed-martin-sha-256
-    - secret: ca-certs-nl-mod
-    - secret: ca-certs-northrop-grumman-sha-256
-    - secret: ca-certs-orc-nfi
-    - secret: ca-certs-orc-ssp
-    - secret: ca-certs-raytheon-sha-1
-    - secret: ca-certs-raytheon-sha-256
-    - secret: ca-certs-symantec-nfi-trust-chain-1
-    - secret: ca-certs-symantec-nfi-trust-chain-2
-    - secret: ca-certs-symantec-ssp-trust-chain-1
-    - secret: ca-certs-symantec-ssp-trust-chain-2
-    - secret: ca-certs-treasury-ssp-trust-chain-1
-    - secret: ca-certs-treasury-ssp-trust-chain-2
-    - secret: ca-certs-verizon-business-nfi
-    - secret: ca-certs-verizon-business-ssp-trust-chain-1
-    - secret: ca-certs-verizon-business-ssp-trust-chain-2
+  customCAs: []
 
 mail:
   enabled: false
@@ -90,18 +57,28 @@ sso:
   #   validateResponseSignature: true
   #   validateAssertionSignature: true
 
-
-#namespaceOverride: nexus
+statefulset:
+  # This is not supported
+  enabled: false
 replicaCount: 1
 image:
   repository: registry1.dso.mil/ironbank/sonatype/nexus-iq-server/nexus-iq-server
-  tag: 1.107.0-01
+  tag: 1.183.0-01
   pullPolicy: IfNotPresent
 
 job_image:
-  repository: registry1.dso.mil/ironbank/redhat/ubi/ubi8-minimal
-  tag: 8.3
+  repository: registry1.dso.mil/ironbank/redhat/ubi/ubi9-minimal
+  tag: 9.4
   pullPolicy: IfNotPresent
+
+# Set fixOwner.enabled to true, when upgrading from IQ versions 1.117 or 1.100, to change file ownership.
+fixOwner:
+  enabled: false
+  updateUser: 1000
+  updateGroup: 1000
+
+# Annotations to add to iq server pod
+podAnnotations:
 
 iq:
   name: nxiq
@@ -114,20 +91,65 @@ iq:
   extraLabels:
   # enter appropriate proxy settings as required. NXIQ requires external access
   # to validate the license
+  # add the following two lines to mount a secrets volume within the container at the specified location
+  secretName: #secret-jks
+  secretMountName: #/etc/secret-volume
   env:
     - name: JAVA_OPTS
       value: |-
         -Djava.util.prefs.userRoot=$${SONATYPE_WORK}/javaprefs
+   #     # Leaving FIPS enabled results in issues with the keystore and establishing
+   #     # a SSL connection with custom certificates
+   #     -Dcom.redhat.fips=false
    #    -Dhttp.proxyHost=proxyserver
    #    -Dhttp.proxyPort=proxyport
    #    -Dhttps.proxyHost=proxyserver
    #    -Dhttps.proxyPort=proxyport
    #    -Dhttp.nonProxyHosts=nonproxyhosts
+  # Configures the startup probe for IQ pod
+  startupProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    failureThreshold: 180
+    timeoutSeconds: 2
+    successThreshold: 1
+  # Configures the liveness probe for IQ pod
+  livenessProbe:
+    initialDelaySeconds: 10
+    periodSeconds: 10
+    failureThreshold: 3
+    timeoutSeconds: 2
+    successThreshold: 1
+  # Configures the readiness probe for IQ pod
+  readinessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 30
+    failureThreshold: 10
+    timeoutSeconds: 2
+    successThreshold: 1
+
+# In conjunction with 'secretName' and 'secretMountName' above, this is an example of how to inject required password
+# secrets into the runtime environment, and how to modify the startup of the server to utilize custom Java SSL stores.
+#    - name: TRUSTSTORE_PASSWORD
+#        valueFrom:
+#          secretKeyRef:
+#            name: secret-jks
+#            key: truststorePassword
+#    - name: KEYSTORE_PASSWORD
+#      valueFrom:
+#        secretKeyRef:
+#          name: secret-jks
+#          key: keystorePassword
+#    - name: JAVA_OPTS
+#      value: "-Djavax.net.ssl.keyStoreType=jks -Djavax.net.ssl.keyStore=/etc/secret-volume/keystore.jks -Djavax.net.ssl.keyStorePassword=$(KEYSTORE_PASSWORD) -Djavax.net.ssl.trustStoreType=jks -Djavax.net.ssl.trustStore=/etc/secret-volume/truststore.jks -Djavax.net.ssl.trustStorePassword=$(TRUSTSTORE_PASSWORD) -Djava.util.prefs.userRoot=${SONATYPE_WORK}/javaprefs"
 
 deploymentStrategy: Recreate
-imagePullSecrets: []
+imagePullSecrets:
+  - name: private-registry
+
 nameOverride: ""
 fullnameOverride: "nexus-iq"
+environment: "production"
 
 serviceAccount:
   # Specifies whether a service account should be created
@@ -138,16 +160,21 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name:
 
-podSecurityContext: {}
-  # fsGroup: 2000
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
 
-securityContext: {}
-  # capabilities:
-  #   drop:
-  #   - ALL
+securityContext:
+  allowPrivilegeEscalation: false
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+  capabilities:
+    drop:
+    - ALL
   # readOnlyRootFilesystem: true
-  # runAsNonRoot: true
-  # runAsUser: 1000
 
 service:
   type: "ClusterIP"
@@ -188,6 +215,7 @@ tolerations: []
 affinity: {}
 
 persistence:
+  enabled: true
   accessMode: ReadWriteOnce
   ## If defined, storageClass: <storageClass>
   ## If set to "-", storageClass: "", which disables dynamic provisioning
@@ -197,18 +225,26 @@ persistence:
   # storageClass: "-"
   storageSize: 1Gi
   # existingClaim:
+  # existingLogClaim:
   # annotations:
   #  "helm.sh/resource-policy": keep
   ## Configure the volume type.
+  # storageClass: "-"
   # volumeConfiguration:
   #   hostPath:
   #     path: /data/nxiq/
+  # If you want to use existing PersistentDisk with data, you can create a PV for it by uncommenting the following lines. (Currently supports GCE PD only)
+  # pdName: nexus-data-disk
+  # fsType: ext4
+  # Uncomment below 2 lines, if you want to use an existing GCE PersistentDisk for IQ Logs.
+  # logpdName: nexus-log-disk
+  # logfsType: ext4
 
 # configYaml is the full text of the config.yml file that will be passed to IQ Server
 configYaml:
-  # licenseFile: /etc/nexus-iq-license/sonatype-license.lic
   # baseUrl: http://iq-server.demo
   sonatypeWork: /sonatype-work
+  # licenseFile: /etc/nexus-iq-license/sonatype-license.lic
   server:
     applicationConnectors:
       - type: http
@@ -220,10 +256,13 @@ configYaml:
     requestLog:
       appenders:
         #All appenders set to console
-        - type: console
+        - type: file
+          currentLogFilename: /var/log/nexus-iq-server/request.log
           # Do not display log statements below this threshold to stdout.
-          threshold: INFO
+          # threshold: INFO
           logFormat: "%clientHost %l %user [%date] \"%requestURL\" %statusCode %bytesSent %elapsedTime \"%header{User-Agent}\""
+          archivedLogFilenamePattern: /var/log/nexus-iq-server/request-%d.log.gz
+          archivedFileCount: 50
 
   createSampleData: true
 
@@ -257,11 +296,16 @@ configYaml:
             threshold: INFO
 
     appenders:
-
       # Settings for logging to stdout.
       - type: console
-
         # Do not display log statements below this threshold to stdout.
         threshold: INFO
-
         logFormat: "%d{'yyyy-MM-dd HH:mm:ss,SSSZ'} %level [%thread] %X{username} %logger - %msg%n"
+      - type: file
+        # Do not display log statements below this threshold to stdout.
+        threshold: ALL
+        logFormat: "%d{'yyyy-MM-dd HH:mm:ss,SSSZ'} %level [%thread] %X{username} %logger - %msg%n"
+        # The file to which current statements will be logged.
+        currentLogFilename: /var/log/nexus-iq-server/clm-server.log
+        archivedLogFilenamePattern: /var/log/nexus-iq-server/clm-server-%d.log.gz
+        archivedFileCount: 50
