@@ -1,6 +1,23 @@
 # Changelog
 
 ---
+## 183.0.0-bb.0 - 2024-10-31
+### Changed
+- chart upgrade to upstream 183.0.0
+- image bump to 1.183.0-01
+- ubi image bump to 9.4
+
+## 144.0.0-bb.0 - 2023-01-12
+### Changed
+- image bump to 1.144.0-05
+- ubi image bump to 8.6
+- quote defaultMode of custom-ca volume
+
+## 132.0.2-bb.0 - 2022-03-08
+### Changed
+- update chart from source
+- image bump to 1.132.2
+
 ## 107.0.1-bb.0 - 2021-09-09
 ### Changed
 - incremented chart version to match image version
