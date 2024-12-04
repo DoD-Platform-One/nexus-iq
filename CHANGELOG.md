@@ -1,6 +1,11 @@
 # Changelog
 
 ---
+## 184.0.0-bb.0 - 2024-12-02
+### Changed
+- chart upgrade to upstream 184.0.0
+- image bump to 1.184.0-01
+
 ## 183.0.0-bb.0 - 2024-10-31
 ### Changed
 - chart upgrade to upstream 183.0.0
