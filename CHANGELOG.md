@@ -1,6 +1,10 @@
 # Changelog
 
 ---
+## 184.0.0-bb.1 - 2024-12-16
+### Changed
+- add additional codeowners
+
 ## 184.0.0-bb.0 - 2024-12-02
 ### Changed
 - chart upgrade to upstream 184.0.0
