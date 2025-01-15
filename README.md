@@ -1,6 +1,6 @@
 # nexus-iq-server
 
-![Version: 185.0.0-bb.0](https://img.shields.io/badge/Version-185.0.0--bb.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.185.0](https://img.shields.io/badge/AppVersion-1.185.0-informational?style=flat-square)
+![Version: 186.0.0-bb.0](https://img.shields.io/badge/Version-186.0.0--bb.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.186.0](https://img.shields.io/badge/AppVersion-1.186.0-informational?style=flat-square)
 
 ## Upstream References
 * <https://www.sonatype.com/product-nexus-lifecycle>
@@ -39,7 +39,7 @@ helm install nexus-iq-server chart/
 | admin.username | string | `"admin"` |  |
 | admin.password | string | `"admin123"` |  |
 | certificates.image.repository | string | `"registry1.dso.mil/ironbank/sonatype/nexus-iq-server/nexus-iq-server"` |  |
-| certificates.image.tag | string | `"1.185.0-01"` |  |
+| certificates.image.tag | string | `"1.186.0-01"` |  |
 | certificates.image.pullPolicy | string | `"IfNotPresent"` |  |
 | certificates.truststore.password | string | `"changeit"` |  |
 | certificates.customCAs[0].secret | string | `"ca-certs-dod-trust-anchors"` |  |
@@ -84,7 +84,7 @@ helm install nexus-iq-server chart/
 | statefulset.enabled | bool | `false` |  |
 | replicaCount | int | `1` |  |
 | image.repository | string | `"registry1.dso.mil/ironbank/sonatype/nexus-iq-server/nexus-iq-server"` |  |
-| image.tag | string | `"1.185.0-01"` |  |
+| image.tag | string | `"1.186.0-01"` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
 | job_image.repository | string | `"registry1.dso.mil/ironbank/redhat/ubi/ubi9-minimal"` |  |
 | job_image.tag | float | `9.4` |  |

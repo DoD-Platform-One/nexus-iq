@@ -26,7 +26,7 @@ certificates:
   defaultMode: 420
   image:
     repository: registry1.dso.mil/ironbank/sonatype/nexus-iq-server/nexus-iq-server
-    tag: 1.185.0-01
+    tag: 1.186.0-01
     pullPolicy: IfNotPresent
   truststore:
     # If adding certificates to an existing truststore, the password should
@@ -63,7 +63,7 @@ statefulset:
 replicaCount: 1
 image:
   repository: registry1.dso.mil/ironbank/sonatype/nexus-iq-server/nexus-iq-server
-  tag: 1.185.0-01
+  tag: 1.186.0-01
   pullPolicy: IfNotPresent
 
 job_image:
