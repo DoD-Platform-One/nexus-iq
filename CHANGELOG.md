@@ -1,6 +1,11 @@
 # Changelog
 
 ---
+## 189.0.0-bb.0 - 2025-04-07
+### Changed
+- chart upgrade to upstream 189.0.0
+- image bump to 1.189.0-01
+
 ## 188.0.0-bb.0 - 2025-03-25
 ### Changed
 - chart upgrade to upstream 188.0.0
