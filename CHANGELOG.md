@@ -2,6 +2,12 @@
 
 ---
 
+
+## 194.0.0-bb.0 - 2025-08-27
+### Changed
+- chart upgrade to upstream 194.0.0
+- image bump to 1.194.0-01
+
 ## 193.0.0-bb.0 - 2025-07-24
 ### Changed
 - chart upgrade to upstream 193.0.0
